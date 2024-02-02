@@ -3,24 +3,38 @@ from portfolio import Flask
 from flask_migrate import Migrate
 
 def create_app(test_config=None):
-    app = Flask(__name__)
-    app.config.from_pyfile(config_filename)
+    app = Flask(__name__, instance_relative_config=True)
+    app.config.from_mapping(
+        SECRET_KEY='dev',
+        SQLALCHEMY_DATABASE_URI='postgresql://postgres@localhost:5432/tr_speedrunning2',
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        SQLALCHEMY_ECHO=True
+    )
 
-    from yourapplication.model import db
+    if test_config is None:
+        # load the instance config, if it exists, when not testing
+        app.config.from_pyfile('config.py', silent=True)
+    else:
+        # load the test config if passed in
+        app.config.from_mapping(test_config)
+
+    # ensure the instance folder exists
+    try:
+        os.makedirs(app.instance_path)
+    except OSError:
+        pass
+
+    from .models import db
     db.init_app(app)
+    migrate = Migrate(app, db)
 
-    from yourapplication.views.admin import admin
-    from yourapplication.views.frontend import frontend
-    app.register_blueprint(admin)
-    app.register_blueprint(frontend)
+    from .api import games, runs, users, profiles
+    app.register_blueprint(games.bp)
+    app.register_blueprint(profiles.bp)
+    app.register_blueprint(users.bp)
+    app.register_blueprint(runs.bp)
+    # from .api import users, tweets
+    # app.register_blueprint(users.bp)
+    # app.register_blueprint(tweets.bp)
 
     return app
-
-# def create_app(test_config=None):
-#     app = Flask(__name__, instance_relative_config=True)
-#     app.config.from_mapping(
-#         SECRET_KEY='dev',
-#         SQLALCHEMY_DATABASE_URI='postgresql://postgres@localhost:5432/tr_speedrunning2',
-#         SQLALCHEMY_TRACK_MODIFICATIONS=False,
-#         SQLALCHEMY_ECHO=True
-#     )
