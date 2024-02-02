@@ -1,12 +1,15 @@
 import os
-from portfolio import Flask
+from flask import Flask
 from flask_migrate import Migrate
+
+# https://flask.palletsprojects.com/en/2.0.x/patterns/appfactories/
+
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
-        SQLALCHEMY_DATABASE_URI='postgresql://postgres@localhost:5432/tr_speedrunning',
+        SQLALCHEMY_DATABASE_URI='postgresql://postgres@localhost:5432/tr_speedrunning2',
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         SQLALCHEMY_ECHO=True
     )
